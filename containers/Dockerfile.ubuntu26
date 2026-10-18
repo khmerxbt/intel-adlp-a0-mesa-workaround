@@ -1,0 +1,6 @@
+FROM ubuntu:26.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends  build-essential meson ninja-build pkg-config python3-mako python3-ply python3-yaml python3-packaging  libdrm-dev libexpat1-dev libzstd-dev zlib1g-dev libx11-dev libxext-dev libxfixes-dev libxrandr-dev  libxshmfence-dev libxcb-shm0-dev libxcb-xfixes0-dev libxcb-xinput-dev libxxf86vm-dev  libxcb-glx0-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxcb-sync-dev libxcb-randr0-dev  libwayland-dev libwayland-egl-backend-dev wayland-protocols libglvnd-dev bison flex libelf-dev  libudev-dev libgtest-dev llvm-21-dev libclang-21-dev libclang-cpp21-dev libclc-21-dev libclc-21  libllvmspirvlib-21-dev spirv-tools spirv-tools-dev glslang-tools libx11-xcb-dev libxcb-keysyms1-dev  libdisplay-info-dev libvulkan-dev ca-certificates patch xz-utils
+COPY . /project
+WORKDIR /project
+ENTRYPOINT ["sh", "/project/scripts/build-mesa.sh"]

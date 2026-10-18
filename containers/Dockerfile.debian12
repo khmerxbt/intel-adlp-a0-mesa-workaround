@@ -1,0 +1,6 @@
+FROM debian:bookworm-slim
+ENV DEBIAN_FRONTEND=noninteractive
+COPY . /project
+RUN sh /project/scripts/setup-debian12.sh
+WORKDIR /project
+ENTRYPOINT ["sh", "/project/scripts/build-mesa.sh"]
