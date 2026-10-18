@@ -1,0 +1,14 @@
+.git
+work
+out
+build*
+.cache
+__pycache__
+.env
+.env.*
+*.iso
+*.rom
+*.p2s
+*.qcow2
+.DS_Store
+probe-bin

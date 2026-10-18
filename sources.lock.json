@@ -1,0 +1,23 @@
+{
+  "mesa": {
+    "url": "https://archive.mesa3d.org/mesa-26.0.8.tar.xz",
+    "sha256": "caf1c0061a68e88dfa74967a7e780c0e85d65b6c4e334cd69095a5dc54ad78bc"
+  },
+  "spirv-tools": {
+    "url": "https://codeload.github.com/KhronosGroup/SPIRV-Tools/tar.gz/refs/tags/v2024.1",
+    "sha256": "137780e2a8b5c722888f9ec0fb553e6e92f38a0a5c7fcdad9b715152448b9d82"
+  },
+  "spirv-headers": {
+    "url": "https://codeload.github.com/KhronosGroup/SPIRV-Headers/tar.gz/8b246ff75c6615ba4532fe4fde20f1be090c3764",
+    "sha256": "cfeed5f9a97d12a9761a26e7f5bd10fedb1a8ce92033075151ae3bc7206fc229"
+  },
+  "glslang": {
+    "url": "https://codeload.github.com/KhronosGroup/glslang/tar.gz/refs/tags/13.1.1",
+    "sha256": "1c4d0a5a38c8aaf89a2d7e6093be734320599f5a6775b2726beeb05b0c054e66"
+  },
+  "wayland-protocols": {
+    "url": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.47/downloads/wayland-protocols-1.47.tar.xz",
+    "fallback_url": "https://deb.debian.org/debian/pool/main/w/wayland-protocols/wayland-protocols_1.47.orig.tar.xz",
+    "sha256": "5fd4349bcbc9bab9a46f8cf77d1f434296a7a052c87440a094f63fcf62a58e20"
+  }
+}

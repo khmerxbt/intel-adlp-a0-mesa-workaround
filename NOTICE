@@ -1,0 +1,8 @@
+The restored hardware condition is derived from Intel-authored Mesa work
+(Wa_22011186057), originally shipped in Mesa 21.2 and later removed upstream.
+Mesa files and snippets retain their upstream copyright/license obligations.
+The official Mesa source archive contains the complete upstream notices.
+This source-only repository does not redistribute Mesa binaries or toolchain libraries.
+New project scripts, tests and documentation use the MIT license in LICENSE.
+Intel and other product names identify the tested hardware/software; this project
+is independent and is not endorsed by Intel, Mesa, any NAS vendor or game publisher.
