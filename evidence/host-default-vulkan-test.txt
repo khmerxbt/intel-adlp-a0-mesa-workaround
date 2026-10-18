@@ -1,0 +1,2 @@
+GPU=Intel(R) Graphics (ADL GT2) driver=Intel open-source Mesa driver info=Mesa 26.0.8-qy0z.1 arch=64
+PASS 300 dispatches, 307200 verified GPU results

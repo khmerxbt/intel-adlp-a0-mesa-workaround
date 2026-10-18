@@ -1,0 +1,23 @@
+{
+  "sha": "f7e39c6f8545540ed573a6b1036710b55f7d6778",
+  "html_url": "https://github.com/lfdevs/mesa-for-android-container/commit/f7e39c6f8545540ed573a6b1036710b55f7d6778",
+  "commit": {
+    "message": "intel/isl: Remove Wa_22011186057\n\nThis is a ADL-P workaround of a pre-production stepping, with RPL-P\nalready being sold we can remove this workaround.\n\nSigned-off-by: Jos\u00e9 Roberto de Souza <jose.souza@intel.com>\nReviewed-by: Sagar Ghuge <sagar.ghuge@intel.com>\nPart-of: <https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/24699>",
+    "author_name": "Jos\u00e9 Roberto de Souza",
+    "author_date": "2023-08-15T16:01:24Z"
+  },
+  "files": [
+    {
+      "sha": "9a58a4e7842f84bfd15cf57d9b12ea45510431bb",
+      "filename": "src/intel/isl/isl_format.c",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 4,
+      "changes": 4,
+      "blob_url": "https://github.com/lfdevs/mesa-for-android-container/blob/f7e39c6f8545540ed573a6b1036710b55f7d6778/src%2Fintel%2Fisl%2Fisl_format.c",
+      "raw_url": "https://github.com/lfdevs/mesa-for-android-container/raw/f7e39c6f8545540ed573a6b1036710b55f7d6778/src%2Fintel%2Fisl%2Fisl_format.c",
+      "contents_url": "https://api.github.com/repos/lfdevs/mesa-for-android-container/contents/src%2Fintel%2Fisl%2Fisl_format.c?ref=f7e39c6f8545540ed573a6b1036710b55f7d6778",
+      "patch": "@@ -882,10 +882,6 @@ isl_format_supports_ccs_e(const struct intel_device_info *devinfo,\n    if (intel_needs_workaround(devinfo, 14017240301))\n       return false;\n \n-   /* Wa_22011186057: Disable compression on ADL-P A0 */\n-   if (devinfo->platform == INTEL_PLATFORM_ADL && devinfo->gt == 2 && devinfo->revision == 0)\n-      return false;\n-\n    if (!format_info_exists(format))\n       return false;\n "
+    }
+  ]
+}

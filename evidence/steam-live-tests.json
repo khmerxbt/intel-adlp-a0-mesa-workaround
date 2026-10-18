@@ -1,0 +1,32 @@
+[
+  {
+    "test": "egl-probe-protected-stock64",
+    "exit": 0,
+    "output": "GPU=Mesa Intel(R) Graphics (ADL GT2) version=OpenGL ES 3.2 Mesa 25.0.7-2+deb13u1 arch=64\nNative EGL uses stock Iris with compression disabled\nPASS 300 shader draws and pixel readbacks\n"
+  },
+  {
+    "test": "glx-probe-zink64",
+    "exit": 0,
+    "output": "GLX GPU=zink Vulkan 1.4(Intel(R) Graphics (ADL GT2) (INTEL_OPEN_SOURCE_MESA)) version=4.6 (Compatibility Profile) Mesa 25.0.7-2+deb13u1 arch=64 direct=yes\nConfirmed patched ANV library mapped by Zink frontend\nPASS 300 shader draws and pixel readbacks\n"
+  },
+  {
+    "test": "vulkan-probe64",
+    "exit": 0,
+    "output": "GPU=Intel(R) Graphics (ADL GT2) driver=Intel open-source Mesa driver info=Mesa 26.0.8-qy0z.1 arch=64\nPASS 300 dispatches, 307200 verified GPU results\n"
+  },
+  {
+    "test": "egl-probe-protected-stock32",
+    "exit": 0,
+    "output": "GPU=Mesa Intel(R) Graphics (ADL GT2) version=OpenGL ES 3.2 Mesa 25.0.7-2+deb13u1 arch=32\nNative EGL uses stock Iris with compression disabled\nPASS 300 shader draws and pixel readbacks\n"
+  },
+  {
+    "test": "glx-probe-zink32",
+    "exit": 0,
+    "output": "GLX GPU=zink Vulkan 1.4(Intel(R) Graphics (ADL GT2) (INTEL_OPEN_SOURCE_MESA)) version=4.6 (Compatibility Profile) Mesa 25.0.7-2+deb13u1 arch=32 direct=yes\nConfirmed patched ANV library mapped by Zink frontend\nPASS 300 shader draws and pixel readbacks\n"
+  },
+  {
+    "test": "vulkan-probe32",
+    "exit": 0,
+    "output": "GPU=Intel(R) Graphics (ADL GT2) driver=Intel open-source Mesa driver info=Mesa 26.0.8-qy0z.1 arch=32\nPASS 300 dispatches, 307200 verified GPU results\n"
+  }
+]
