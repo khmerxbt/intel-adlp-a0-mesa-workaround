@@ -1,0 +1,12 @@
+# Overlay for the documented legacy dummy-display Steam path; preserve the base stack.
+services:
+  steam-headless:
+    environment:
+      GALLIUM_DRIVER: zink
+      INTEL_DEBUG: noccs
+      LIBGL_KOPPER_DISABLE: "1"
+      LIBGL_KOPPER_DRI2: "1"
+      VK_DRIVER_FILES: /opt/qy0z-mesa/share/vulkan/icd.d/intel_icd.x86_64.json:/opt/qy0z-mesa/share/vulkan/icd.d/intel_icd.i686.json
+      VK_ICD_FILENAMES: /opt/qy0z-mesa/share/vulkan/icd.d/intel_icd.x86_64.json:/opt/qy0z-mesa/share/vulkan/icd.d/intel_icd.i686.json
+    volumes:
+      - ${QY0Z_RUNTIME:?Set absolute staged Debian-compatible runtime path}:/opt/qy0z-mesa:ro
