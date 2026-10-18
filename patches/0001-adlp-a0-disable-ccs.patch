@@ -1,0 +1,168 @@
+diff --git a/VERSION b/VERSION
+index a2a5f6a..ad0d8b5 100644
+--- a/VERSION
++++ b/VERSION
+@@ -1 +1 @@
+-26.0.8
++26.0.8-qy0z.1
+diff --git a/src/gallium/drivers/iris/iris_resource.c b/src/gallium/drivers/iris/iris_resource.c
+index dc06a43..c8336ac 100644
+--- a/src/gallium/drivers/iris/iris_resource.c
++++ b/src/gallium/drivers/iris/iris_resource.c
+@@ -147,7 +147,8 @@ modifier_is_supported(const struct intel_device_info *devinfo,
+    }
+ 
+    bool no_fc = INTEL_DEBUG(DEBUG_NO_FAST_CLEAR);
+-   bool no_ccs = INTEL_DEBUG(DEBUG_NO_CCS) || (bind & PIPE_BIND_CONST_BW);
++   bool no_ccs = intel_device_info_needs_adlp_a0_ccs_wa(devinfo) ||
++                 INTEL_DEBUG(DEBUG_NO_CCS) || (bind & PIPE_BIND_CONST_BW);
+ 
+    /* Check remaining requirements. */
+    switch (modifier) {
+diff --git a/src/intel/dev/intel_device_info.h b/src/intel/dev/intel_device_info.h
+index e6f2a47..4be01ac 100644
+--- a/src/intel/dev/intel_device_info.h
++++ b/src/intel/dev/intel_device_info.h
+@@ -86,6 +86,18 @@ extern "C" {
+ #define BMG_G31_IP_VER GFX_IP_VER(20, 2)
+ #define intel_device_info_is_bmg_g31(devinfo) (devinfo->gfx_ip_ver == BMG_G31_IP_VER)
+ 
++/* Wa_22011186057: ADL-P A0 cannot use CCS surface compression.
++ * Restored for engineering samples after upstream removed pre-production
++ * support in f7e39c6f8545540ed573a6b1036710b55f7d6778 (Mesa 23.3).
++ * Keep the original GT2/revision-0 scope; retail steppings are unaffected.
++ */
++static inline bool
++intel_device_info_needs_adlp_a0_ccs_wa(const struct intel_device_info *devinfo)
++{
++   return devinfo->platform == INTEL_PLATFORM_ADL &&
++          devinfo->gt == 2 && devinfo->revision == 0;
++}
++
+ static inline bool
+ intel_device_info_slice_available(const struct intel_device_info *devinfo,
+                                   int slice)
+diff --git a/src/intel/isl/isl_drm.c b/src/intel/isl/isl_drm.c
+index 80e4feb..c0b7ec3 100644
+--- a/src/intel/isl/isl_drm.c
++++ b/src/intel/isl/isl_drm.c
+@@ -204,6 +204,15 @@ uint32_t
+ isl_drm_modifier_get_score(const struct intel_device_info *devinfo,
+                            uint64_t modifier)
+ {
++   /* A modifier override must not re-enable compression on affected ES GPUs. */
++   if (intel_device_info_needs_adlp_a0_ccs_wa(devinfo)) {
++      const struct isl_drm_modifier_info *info =
++         isl_drm_modifier_get_info(modifier);
++      if (info && (info->supports_render_compression ||
++                   info->supports_media_compression))
++         return 0;
++   }
++
+    /* We want to know the absence of the debug environment variable
+     * and don't want to provide a default value either, so we don't
+     * use debug_get_num_option() here.
+diff --git a/src/intel/isl/isl_format.c b/src/intel/isl/isl_format.c
+index 1baeaa2..6851838 100644
+--- a/src/intel/isl/isl_format.c
++++ b/src/intel/isl/isl_format.c
+@@ -886,6 +886,9 @@ bool
+ isl_format_supports_ccs_e(const struct intel_device_info *devinfo,
+                           enum isl_format format)
+ {
++   if (intel_device_info_needs_adlp_a0_ccs_wa(devinfo))
++      return false;
++
+    if (!format_info_exists(format))
+       return false;
+ 
+diff --git a/src/intel/isl/meson.build b/src/intel/isl/meson.build
+index 40bb094..f25a7ad 100644
+--- a/src/intel/isl/meson.build
++++ b/src/intel/isl/meson.build
+@@ -148,6 +148,17 @@ isl_query = executable(
+ endif
+ 
+ if with_tests
++  test(
++    'isl_adlp_a0_ccs',
++    executable(
++      'isl_adlp_a0_ccs_test',
++      'tests/isl_adlp_a0_ccs_test.c',
++      dependencies : [dep_m, idep_mesautil, idep_intel_dev],
++      link_with : libisl,
++      include_directories : [inc_include, inc_src, inc_intel],
++    ),
++    suite : ['intel'],
++  )
+   test(
+     'isl_surf_get_image_offset',
+     executable(
+diff --git a/src/intel/isl/tests/isl_adlp_a0_ccs_test.c b/src/intel/isl/tests/isl_adlp_a0_ccs_test.c
+new file mode 100644
+index 0000000..81907d5
+--- /dev/null
++++ b/src/intel/isl/tests/isl_adlp_a0_ccs_test.c
+@@ -0,0 +1,62 @@
++/* SPDX-License-Identifier: MIT */
++#include <stdio.h>
++#include <inttypes.h>
++#include <stdlib.h>
++#include "dev/intel_device_info.h"
++#include "isl/isl.h"
++#include "isl/isl_priv.h"
++#include "drm-uapi/drm_fourcc.h"
++
++#define CHECK(c) do { if (!(c)) { fprintf(stderr, "line %d: %s\n", __LINE__, #c); abort(); } } while (0)
++
++static void
++check_device(unsigned pci_id, unsigned revision, bool affected)
++{
++   struct intel_device_info info;
++   CHECK(intel_get_device_info_from_pci_id(pci_id, &info));
++   info.revision = revision;
++   struct isl_device dev;
++   isl_device_init(&dev, &info);
++   CHECK(intel_device_info_needs_adlp_a0_ccs_wa(&info) == affected);
++   CHECK(isl_format_supports_ccs_e(&info, ISL_FORMAT_R8G8B8A8_UNORM) == !affected);
++   CHECK(_isl_surf_info_supports_ccs(&dev, ISL_FORMAT_R8G8B8A8_UNORM,
++                                  ISL_SURF_USAGE_RENDER_TARGET_BIT) == !affected);
++   CHECK((isl_drm_modifier_get_score(&info, I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS) != 0) == !affected);
++   if (affected) {
++      CHECK(isl_drm_modifier_get_score(&info, I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS) == 0);
++      CHECK(isl_drm_modifier_get_score(&info, I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC) == 0);
++   }
++   struct isl_surf surf;
++   bool init_ok = isl_surf_init(&dev, &surf,
++      .dim = ISL_SURF_DIM_2D, .format = ISL_FORMAT_R8G8B8A8_UNORM,
++      .width = 64, .height = 64, .depth = 1, .levels = 1,
++      .array_len = 1, .samples = 1,
++      .usage = ISL_SURF_USAGE_RENDER_TARGET_BIT | ISL_SURF_USAGE_TEXTURE_BIT,
++      .tiling_flags = ISL_TILING_Y0_BIT);
++   CHECK(init_ok);
++   CHECK(isl_surf_supports_ccs(&dev, &surf, NULL) == !affected);
++   CHECK(isl_drm_modifier_get_score(&info, I915_FORMAT_MOD_Y_TILED) != 0);
++   CHECK(isl_drm_modifier_get_score(&info, DRM_FORMAT_MOD_LINEAR) != 0);
++}
++
++int main(void)
++{
++   /* Match the NAS, later retail revisions, and unrelated GT1/Tiger Lake. */
++   check_device(0x46a1, 0, true);
++   check_device(0x46a1, 4, false);
++   check_device(0x4680, 0, false);
++   check_device(0x9a49, 0, false);
++   /* An explicit modifier override must not bypass the ES safety rule. */
++   struct intel_device_info info;
++   CHECK(intel_get_device_info_from_pci_id(0x46a1, &info));
++   info.revision = 0;
++   char modifier[32];
++   snprintf(modifier, sizeof(modifier), "%" PRIu64,
++            (uint64_t)I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS);
++   CHECK(setenv("INTEL_MODIFIER_OVERRIDE", modifier, 1) == 0);
++   CHECK(isl_drm_modifier_get_score(&info, I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS) == 0);
++   info.revision = 4;
++   CHECK(isl_drm_modifier_get_score(&info, I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS) != 0);
++   puts("ADL-P A0 CCS allocation/modifier restrictions and controls passed");
++   return 0;
++}
