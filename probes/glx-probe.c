@@ -1,0 +1,11 @@
+#define GL_GLEXT_PROTOTYPES 1
+#include <X11/Xlib.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glx.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define CHECK(x) do{if(!(x)){fprintf(stderr,"check failed %s line %d GL=%x\n",#x,__LINE__,glGetError());exit(1);}}while(0)
+static GLuint shader(GLenum type,const char*s){GLuint v=glCreateShader(type);glShaderSource(v,1,&s,0);glCompileShader(v);GLint ok=0;glGetShaderiv(v,GL_COMPILE_STATUS,&ok);CHECK(ok);return v;}
+int main(){CHECK(XInitThreads());Display*d=XOpenDisplay(0);CHECK(d);int attrs[]={GLX_DRAWABLE_TYPE,GLX_PBUFFER_BIT,GLX_RENDER_TYPE,GLX_RGBA_BIT,GLX_RED_SIZE,8,GLX_GREEN_SIZE,8,GLX_BLUE_SIZE,8,None};int n;GLXFBConfig*cs=glXChooseFBConfig(d,DefaultScreen(d),attrs,&n);CHECK(cs&&n);int pa[]={GLX_PBUFFER_WIDTH,64,GLX_PBUFFER_HEIGHT,64,None};GLXPbuffer pb=glXCreatePbuffer(d,cs[0],pa);CHECK(pb);GLXContext ctx=glXCreateNewContext(d,cs[0],GLX_RGBA_TYPE,0,True);CHECK(ctx);CHECK(glXMakeContextCurrent(d,pb,pb,ctx));CHECK(glXIsDirect(d,ctx));const char*r=(void*)glGetString(GL_RENDERER);const char*v=(void*)glGetString(GL_VERSION);printf("GLX GPU=%s version=%s arch=%zu direct=yes\n",r,v,sizeof(void*)*8);fflush(stdout);CHECK(strstr(r,"Intel")&&strstr(v,"qy0z.1"));GLuint vs=shader(GL_VERTEX_SHADER,"attribute vec2 p; void main(){gl_Position=vec4(p,0.,1.);}");GLuint fs=shader(GL_FRAGMENT_SHADER,"uniform float g; void main(){gl_FragColor=vec4(1.,g,0.,1.);}");GLuint prog=glCreateProgram();glAttachShader(prog,vs);glAttachShader(prog,fs);glBindAttribLocation(prog,0,"p");glLinkProgram(prog);GLint ok;glGetProgramiv(prog,GL_LINK_STATUS,&ok);CHECK(ok);glUseProgram(prog);GLfloat vertices[]={-1,-1,3,-1,-1,3};glVertexAttribPointer(0,2,GL_FLOAT,0,0,vertices);glEnableVertexAttribArray(0);glViewport(0,0,64,64);GLint loc=glGetUniformLocation(prog,"g");for(int k=0;k<300;k++){float g=(k%2)?1.:0.;glUniform1f(loc,g);glDrawArrays(GL_TRIANGLES,0,3);unsigned char px[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);CHECK(glGetError()==GL_NO_ERROR);CHECK(px[0]>250&&abs((int)px[1]-(g?255:0))<3&&px[2]<3);}puts("PASS 300 shader draws and pixel readbacks");glXMakeContextCurrent(d,None,None,0);glXDestroyContext(d,ctx);glXDestroyPbuffer(d,pb);XCloseDisplay(d);return 0;}
